@@ -10,7 +10,7 @@
 
 set -e
 
-VERSION="${1%/}"
+VERSION="7.54.0"
 CHE_THEIA_DEVWORKSPACE_HANDLER_VERSION=0.0.1-1639071223
 CHE_CODE_DEVWORKSPACE_HANDLER_VERSION=1.64.0-dev-210b722
 
@@ -47,11 +47,11 @@ do
       cheTheiaEndpointRuntimeBinary="${cheTheia}-endpoint-runtime-binary"
       cheMachineExec="quay.io/eclipse/che-machine-exec"
       sed -i "${dir}/devworkspace-che-theia-latest.yaml" \
-          -e "s#${cheTheia}@sha256:\([a-z0-9\_]\([\-\.\_a-z0-9]\)*\)#${cheTheia}:${VERSION}#"
+          -e "s#${cheTheia}@sha256:\([a-z0-9\_]\([\-\.\_a-z0-9]\)*\)#sds.redii.net/ide-dev/che-theia:${VERSION}#"
       sed -i "${dir}/devworkspace-che-theia-latest.yaml" \
-          -e "s#${cheTheiaEndpointRuntimeBinary}@sha256:\([a-z0-9\_]\([\-\.\_a-z0-9]\)*\)#${cheTheiaEndpointRuntimeBinary}:${VERSION}#"
+          -e "s#${cheTheiaEndpointRuntimeBinary}@sha256:\([a-z0-9\_]\([\-\.\_a-z0-9]\)*\)#sds.redii.net/ide-dev/che-theia-endpoint-runtime-binary:${VERSION}#"
       sed -i "${dir}/devworkspace-che-theia-latest.yaml" \
-          -e "s#${cheMachineExec}@sha256:\([a-z0-9\_]\([\-\.\_a-z0-9]\)*\)#${cheMachineExec}:${VERSION}#"
+          -e "s#${cheMachineExec}@sha256:\([a-z0-9\_]\([\-\.\_a-z0-9]\)*\)#sds.redii.net/ide-dev/che-machine-exec:${VERSION}#"
     fi
 
     clone_and_zip "${devfile_repo}" "${devfile_url##*/}" "/build/resources/v2/$name.zip"

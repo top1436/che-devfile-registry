@@ -92,7 +92,7 @@ if env | grep -q ".*devfile_registry_image.*"; then
       digest="${imageMap[${image}]}"
 
       if [[ -z "${digest}" ]] && [ "${#separators}" == "1" ]; then
-        imageWithDefaultRegistry="docker.io/${image}"
+        imageWithDefaultRegistry="sds.redii.net/${image}"
         digest="${imageMap[${imageWithDefaultRegistry}]}"
       fi
 
@@ -115,37 +115,38 @@ fi
 # We can't use the `-d` option for readarray because
 # registry.centos.org/centos/httpd-24-centos7 ships with Bash 4.2
 # The below command will fail if any path contains whitespace
-readarray -t devfiles < <(find "${DEVFILES_DIR}" -name 'devfile.yaml')
-readarray -t metas < <(find "${DEVFILES_DIR}" -name 'meta.yaml')
-readarray -t templates < <(find "${DEVFILES_DIR}" -name 'devworkspace-che-*.yaml')
-for devfile in "${devfiles[@]}"; do
-  echo "Checking devfile $devfile"
+readarray -t files < <(find "${DEVFILES_DIR}" -name 'devfile.yaml' -o -name 'meta.yaml' -o -name 'devworkspace-che-*.yaml')
+for file in "${files[@]}"; do
+  echo "Checking files $file"
   # Need to update each field separately in case they are not defined.
   # Defaults don't work because registry and tags may be different.
+  
+  echo "    change repository and image in multiline"
   if [ -n "$REGISTRY" ]; then
     echo "    Updating image registry to $REGISTRY"
-    sed -i -E "s|image:$IMAGE_REGEX|image:\1${REGISTRY}/\3/\4\5:\6\7|" "$devfile"
+    sed -i -E "s|image:$IMAGE_REGEX|image:\1${REGISTRY}/\3/\4\5:\6\7|g" "$file"
   fi
   if [ -n "$ORGANIZATION" ]; then
     echo "    Updating image organization to $ORGANIZATION"
-    sed -i -E "s|image:$IMAGE_REGEX|image:\1\2/${ORGANIZATION}/\4\5:\6\7|" "$devfile"
+    sed -i -E "s|image:$IMAGE_REGEX|image:\1\2/${ORGANIZATION}/\4\5:\6\7|g" "$file"
   fi
   if [ -n "$TAG" ]; then
     echo "    Updating image tag to $TAG"
-    sed -i -E "s|image:$IMAGE_REGEX|image:\1\2/\3/\4:${TAG}\7|" "$devfile"
+    sed -i -E "s|image:$IMAGE_REGEX|image:\1\2/\3/\4:${TAG}\7|g" "$file"
   fi
+  sed -i -E "s|image:.*/.*/|sds.redii.net/ide-dev/|g" "$file"
 done
 
 if [ -n "$INTERNAL_URL" ]; then
   INTERNAL_URL=${INTERNAL_URL%/}
   echo "Updating internal URL in files to ${INTERNAL_URL}"
-  sed -i "s|{{ INTERNAL_URL }}|${INTERNAL_URL}|" "${devfiles[@]}" "${metas[@]}" "${templates[@]}" "$INDEX_JSON"
+  sed -i "s|{{ INTERNAL_URL }}|${INTERNAL_URL}|" "${files[@]}" "$INDEX_JSON"
 fi
 
 if [ -n "$PUBLIC_URL" ]; then
   echo "Updating devfiles to point at internal project zip files"
   PUBLIC_URL=${PUBLIC_URL%/}
-  sed -i "s|{{ DEVFILE_REGISTRY_URL }}|${PUBLIC_URL}|" "${devfiles[@]}" "${metas[@]}" "${templates[@]}" "$INDEX_JSON"
+  sed -i "s|{{ DEVFILE_REGISTRY_URL }}|${PUBLIC_URL}|" "${files[@]}" "$INDEX_JSON"
 
   # Add PUBLIC_URL at the begining of 'icon' field and links ('self', 'eclipse/che-theia/latest' and 'eclipse/che-theia/next')
   sed -i "s|\"icon\": \"/images/|\"icon\": \"${PUBLIC_URL}/images/|" "$INDEX_JSON"
@@ -163,7 +164,7 @@ else
     SERVICE_HOST=$(env | grep DEVFILE_REGISTRY_SERVICE_HOST= | cut -d '=' -f 2)
     SERVICE_PORT=$(env | grep DEVFILE_REGISTRY_SERVICE_PORT= | cut -d '=' -f 2)
     URL="http://${SERVICE_HOST}:${SERVICE_PORT}"
-    sed -i "s|{{ DEVFILE_REGISTRY_URL }}|${URL}|" "${devfiles[@]}" "${metas[@]}" "${templates[@]}" "$INDEX_JSON"
+    sed -i "s|{{ DEVFILE_REGISTRY_URL }}|${URL}|" "${files[@]}" "$INDEX_JSON"
   fi
 fi
 
