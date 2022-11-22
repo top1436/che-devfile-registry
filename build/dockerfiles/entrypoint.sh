@@ -134,7 +134,7 @@ for file in "${files[@]}"; do
     echo "    Updating image tag to $TAG"
     sed -i -E "s|image:$IMAGE_REGEX|image:\1\2/\3/\4:${TAG}\7|g" "$file"
   fi
-  sed -i -E "s|image:.*/.*/|sds.redii.net/ide-dev/|g" "$file"
+  sed -i -E "s|image:.*/.*/|image: sds.redii.net/ide-dev/|g" "$file"
 done
 
 if [ -n "$INTERNAL_URL" ]; then
