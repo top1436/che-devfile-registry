@@ -125,15 +125,15 @@ for file in "${files[@]}"; do
   echo "    change repository and image in multiline"
   if [ -n "$REGISTRY" ]; then
     echo "    Updating image registry to $REGISTRY"
-    < "$file" tr '\n' '\r' | sed -i -E "s|image:$IMAGE_REGEX|image:\1${REGISTRY}/\3/\4\5:\6\7|g" | tr '\r' '\n' > "$file.tmp" && cat "$file.tmp" > "$file" && rm "$file.tmp"
+    < "$file" tr '\n' '\r' | sed -E "s|image:$IMAGE_REGEX|image:\1${REGISTRY}/\3/\4\5:\6\7|g" | tr '\r' '\n' > "$file.tmp" && cat "$file.tmp" > "$file" && rm "$file.tmp"
   fi
   if [ -n "$ORGANIZATION" ]; then
     echo "    Updating image organization to $ORGANIZATION"
-    < "$file" tr '\n' '\r' | sed -i -E "s|image:$IMAGE_REGEX|image:\1\2/${ORGANIZATION}/\4\5:\6\7|g" | tr '\r' '\n' > "$file.tmp" && cat "$file.tmp" > "$file" && rm "$file.tmp"
+    < "$file" tr '\n' '\r' | sed -E "s|image:$IMAGE_REGEX|image:\1\2/${ORGANIZATION}/\4\5:\6\7|g" | tr '\r' '\n' > "$file.tmp" && cat "$file.tmp" > "$file" && rm "$file.tmp"
   fi
   if [ -n "$TAG" ]; then
     echo "    Updating image tag to $TAG"
-    < "$file" tr '\n' '\r' | sed -i -E "s|image:$IMAGE_REGEX|image:\1\2/\3/\4:${TAG}\7|g" | tr '\r' '\n' > "$file.tmp" && cat "$file.tmp" > "$file" && rm "$file.tmp"
+    < "$file" tr '\n' '\r' | sed -E "s|image:$IMAGE_REGEX|image:\1\2/\3/\4:${TAG}\7|g" | tr '\r' '\n' > "$file.tmp" && cat "$file.tmp" > "$file" && rm "$file.tmp"
   fi
 done
 
