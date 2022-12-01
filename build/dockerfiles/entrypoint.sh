@@ -44,7 +44,8 @@ INDEX_JSON="${DEVFILES_DIR}/index.json"
 #   \5 - Optional image digest identifier (empty for tags), e.g. quay.io/eclipse/che-theia(@sha256):digest
 #   \6 - Tag of image or digest, e.g. quay.io/eclipse/che-theia:(tag)
 #   \7 - Optional quotation following image reference
-IMAGE_REGEX='([[:space:]]*"?)([._:a-zA-Z0-9-]*)/([._a-zA-Z0-9-]*)/([._a-zA-Z0-9-]*)(@sha256)?:([._a-zA-Z0-9-]*)("?)'
+IMAGE_REGEX="([[:space:]>-]*[\r]?[[:space:]]*[\"']?)([._:a-zA-Z0-9-]*)/([._a-zA-Z0-9-]*)/([._a-zA-Z0-9-]*)(@sha256)?:([._a-zA-Z0-9-]*)([\"']?)"
+
 
 # Extract and use env variables with image digest information.
 # Env variable name format: 
@@ -124,17 +125,16 @@ for file in "${files[@]}"; do
   echo "    change repository and image in multiline"
   if [ -n "$REGISTRY" ]; then
     echo "    Updating image registry to $REGISTRY"
-    sed -i -E "s|image:$IMAGE_REGEX|image:\1${REGISTRY}/\3/\4\5:\6\7|g" "$file"
+    < "$file" tr '\n' '\r' | sed -i -E "s|image:$IMAGE_REGEX|image:\1${REGISTRY}/\3/\4\5:\6\7|g" | tr '\r' '\n' > "$file.tmp" && cat "$file.tmp" > "$file" && rm "$file.tmp"
   fi
   if [ -n "$ORGANIZATION" ]; then
     echo "    Updating image organization to $ORGANIZATION"
-    sed -i -E "s|image:$IMAGE_REGEX|image:\1\2/${ORGANIZATION}/\4\5:\6\7|g" "$file"
+    < "$file" tr '\n' '\r' | sed -i -E "s|image:$IMAGE_REGEX|image:\1\2/${ORGANIZATION}/\4\5:\6\7|g" | tr '\r' '\n' > "$file.tmp" && cat "$file.tmp" > "$file" && rm "$file.tmp"
   fi
   if [ -n "$TAG" ]; then
     echo "    Updating image tag to $TAG"
-    sed -i -E "s|image:$IMAGE_REGEX|image:\1\2/\3/\4:${TAG}\7|g" "$file"
+    < "$file" tr '\n' '\r' | sed -i -E "s|image:$IMAGE_REGEX|image:\1\2/\3/\4:${TAG}\7|g" | tr '\r' '\n' > "$file.tmp" && cat "$file.tmp" > "$file" && rm "$file.tmp"
   fi
-  sed -i -E "s|image:.*/.*/|image: sds.redii.net/ide-dev/|g" "$file"
 done
 
 if [ -n "$INTERNAL_URL" ]; then

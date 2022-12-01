@@ -10,7 +10,7 @@
 
 set -e
 
-VERSION="7.54.0"
+VERSION="${1%/}"
 CHE_THEIA_DEVWORKSPACE_HANDLER_VERSION=0.0.1-1639071223
 CHE_CODE_DEVWORKSPACE_HANDLER_VERSION=1.64.0-dev-210b722
 
@@ -27,9 +27,9 @@ do
     devfile_repo=${devfile_url%/tree*}
     name=$(basename "${devfile_repo}")
 
-    npm_config_yes=true npx @eclipse-che/che-theia-devworkspace-handler@${CHE_THEIA_DEVWORKSPACE_HANDLER_VERSION} --devfile-url:"${devfile_url}" \
-    --output-file:"${dir}"/devworkspace-che-theia-next.yaml \
-    --project."${name}={{ INTERNAL_URL }}/resources/v2/${name}.zip"
+    # npm_config_yes=true npx @eclipse-che/che-theia-devworkspace-handler@${CHE_THEIA_DEVWORKSPACE_HANDLER_VERSION} --devfile-url:"${devfile_url}" \
+    # --output-file:"${dir}"/devworkspace-che-theia-next.yaml \
+    # --project."${name}={{ INTERNAL_URL }}/resources/v2/${name}.zip"
 
     npm_config_yes=true npx @eclipse-che/che-theia-devworkspace-handler@${CHE_THEIA_DEVWORKSPACE_HANDLER_VERSION} --devfile-url:"${devfile_url}" \
     --editor:eclipse/che-theia/latest \
@@ -42,16 +42,17 @@ do
     --project."${name}={{ INTERNAL_URL }}/resources/v2/${name}.zip"
 
     # When release is happend, we need to replace tags of images in che-theia editor
+    VERSION=7.54.0
     if [ -n "$VERSION" ]; then
       cheTheia="quay.io/eclipse/che-theia"
       cheTheiaEndpointRuntimeBinary="${cheTheia}-endpoint-runtime-binary"
       cheMachineExec="quay.io/eclipse/che-machine-exec"
       sed -i "${dir}/devworkspace-che-theia-latest.yaml" \
-          -e "s#${cheTheia}@sha256:\([a-z0-9\_]\([\-\.\_a-z0-9]\)*\)#sds.redii.net/ide-dev/che-theia:${VERSION}#"
+          -e "s#${cheTheia}@sha256:\([a-z0-9\_]\([\-\.\_a-z0-9]\)*\)#${cheTheia}:${VERSION}#"
       sed -i "${dir}/devworkspace-che-theia-latest.yaml" \
-          -e "s#${cheTheiaEndpointRuntimeBinary}@sha256:\([a-z0-9\_]\([\-\.\_a-z0-9]\)*\)#sds.redii.net/ide-dev/che-theia-endpoint-runtime-binary:${VERSION}#"
+          -e "s#${cheTheiaEndpointRuntimeBinary}@sha256:\([a-z0-9\_]\([\-\.\_a-z0-9]\)*\)#${cheTheiaEndpointRuntimeBinary}:${VERSION}#"
       sed -i "${dir}/devworkspace-che-theia-latest.yaml" \
-          -e "s#${cheMachineExec}@sha256:\([a-z0-9\_]\([\-\.\_a-z0-9]\)*\)#sds.redii.net/ide-dev/che-machine-exec:${VERSION}#"
+          -e "s#${cheMachineExec}@sha256:\([a-z0-9\_]\([\-\.\_a-z0-9]\)*\)#${cheMachineExec}:${VERSION}#"
     fi
 
     clone_and_zip "${devfile_repo}" "${devfile_url##*/}" "/build/resources/v2/$name.zip"
