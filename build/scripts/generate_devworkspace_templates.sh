@@ -27,9 +27,9 @@ do
     devfile_repo=${devfile_url%/tree*}
     name=$(basename "${devfile_repo}")
 
-    npm_config_yes=true npx @eclipse-che/che-theia-devworkspace-handler@${CHE_THEIA_DEVWORKSPACE_HANDLER_VERSION} --devfile-url:"${devfile_url}" \
-    --output-file:"${dir}"/devworkspace-che-theia-next.yaml \
-    --project."${name}={{ INTERNAL_URL }}/resources/v2/${name}.zip"
+    # npm_config_yes=true npx @eclipse-che/che-theia-devworkspace-handler@${CHE_THEIA_DEVWORKSPACE_HANDLER_VERSION} --devfile-url:"${devfile_url}" \
+    # --output-file:"${dir}"/devworkspace-che-theia-next.yaml \
+    # --project."${name}={{ INTERNAL_URL }}/resources/v2/${name}.zip"
 
     npm_config_yes=true npx @eclipse-che/che-theia-devworkspace-handler@${CHE_THEIA_DEVWORKSPACE_HANDLER_VERSION} --devfile-url:"${devfile_url}" \
     --editor:eclipse/che-theia/latest \
@@ -42,6 +42,7 @@ do
     --project."${name}={{ INTERNAL_URL }}/resources/v2/${name}.zip"
 
     # When release is happend, we need to replace tags of images in che-theia editor
+    VERSION=7.56.0
     if [ -n "$VERSION" ]; then
       cheTheia="quay.io/eclipse/che-theia"
       cheTheiaEndpointRuntimeBinary="${cheTheia}-endpoint-runtime-binary"

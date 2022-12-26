@@ -44,7 +44,7 @@ INDEX_JSON="${DEVFILES_DIR}/index.json"
 #   \5 - Optional image digest identifier (empty for tags), e.g. quay.io/eclipse/che-theia(@sha256):digest
 #   \6 - Tag of image or digest, e.g. quay.io/eclipse/che-theia:(tag)
 #   \7 - Optional quotation following image reference
-IMAGE_REGEX='([[:space:]]*"?)([._:a-zA-Z0-9-]*)/([._a-zA-Z0-9-]*)/([._a-zA-Z0-9-]*)(@sha256)?:([._a-zA-Z0-9-]*)("?)'
+IMAGE_REGEX="([[:space:]>-]*[\r]?[[:space:]]*[\"']?)([._:a-zA-Z0-9-]*)/([._a-zA-Z0-9-]*)/([._a-zA-Z0-9-]*)(@sha256)?:([._a-zA-Z0-9-]*)([\"']?)"
 
 # Extract and use env variables with image digest information.
 # Env variable name format: 
@@ -92,7 +92,7 @@ if env | grep -q ".*devfile_registry_image.*"; then
       digest="${imageMap[${image}]}"
 
       if [[ -z "${digest}" ]] && [ "${#separators}" == "1" ]; then
-        imageWithDefaultRegistry="docker.io/${image}"
+        imageWithDefaultRegistry="sds.redii.net/${image}"
         digest="${imageMap[${imageWithDefaultRegistry}]}"
       fi
 
@@ -115,31 +115,30 @@ fi
 # We can't use the `-d` option for readarray because
 # registry.centos.org/centos/httpd-24-centos7 ships with Bash 4.2
 # The below command will fail if any path contains whitespace
-readarray -t devfiles < <(find "${DEVFILES_DIR}" -name 'devfile.yaml')
-readarray -t metas < <(find "${DEVFILES_DIR}" -name 'meta.yaml')
-readarray -t templates < <(find "${DEVFILES_DIR}" -name 'devworkspace-che-*.yaml')
-for devfile in "${devfiles[@]}"; do
-  echo "Checking devfile $devfile"
+readarray -t files < <(find "${DEVFILES_DIR}" -name 'devfile.yaml' -o -name 'meta.yaml' -o -name 'devworkspace-che-*.yaml')
+for file in "${files[@]}"; do
+  echo "Checking files $file"
   # Need to update each field separately in case they are not defined.
   # Defaults don't work because registry and tags may be different.
+  echo "    change repository and image in multiline"
   if [ -n "$REGISTRY" ]; then
     echo "    Updating image registry to $REGISTRY"
-    sed -i -E "s|image:$IMAGE_REGEX|image:\1${REGISTRY}/\3/\4\5:\6\7|" "$devfile"
+    < "$file" tr '\n' '\r' | sed -E "s|image:$IMAGE_REGEX|image:\1${REGISTRY}/\3/\4\5:\6\7|g" | tr '\r' '\n' > "$file.tmp" && cat "$file.tmp" > "$file" && rm "$file.tmp"
   fi
   if [ -n "$ORGANIZATION" ]; then
     echo "    Updating image organization to $ORGANIZATION"
-    sed -i -E "s|image:$IMAGE_REGEX|image:\1\2/${ORGANIZATION}/\4\5:\6\7|" "$devfile"
+    < "$file" tr '\n' '\r' | sed -E "s|image:$IMAGE_REGEX|image:\1\2/${ORGANIZATION}/\4\5:\6\7|g" | tr '\r' '\n' > "$file.tmp" && cat "$file.tmp" > "$file" && rm "$file.tmp"
   fi
   if [ -n "$TAG" ]; then
     echo "    Updating image tag to $TAG"
-    sed -i -E "s|image:$IMAGE_REGEX|image:\1\2/\3/\4:${TAG}\7|" "$devfile"
+    < "$file" tr '\n' '\r' | sed -E "s|image:$IMAGE_REGEX|image:\1\2/\3/\4:${TAG}\7|g" | tr '\r' '\n' > "$file.tmp" && cat "$file.tmp" > "$file" && rm "$file.tmp"
   fi
 done
 
 if [ -n "$INTERNAL_URL" ]; then
   INTERNAL_URL=${INTERNAL_URL%/}
   echo "Updating internal URL in files to ${INTERNAL_URL}"
-  sed -i "s|{{ INTERNAL_URL }}|${INTERNAL_URL}|" "${devfiles[@]}" "${metas[@]}" "${templates[@]}" "$INDEX_JSON"
+  sed -i "s|{{ INTERNAL_URL }}|${INTERNAL_URL}|" "${files[@]}" "$INDEX_JSON"
 fi
 
 if [ -n "$PUBLIC_URL" ]; then
